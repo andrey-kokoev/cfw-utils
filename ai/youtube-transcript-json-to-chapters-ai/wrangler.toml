@@ -1,0 +1,14 @@
+name = "youtube-transcript-json-to-chapters-ai"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+# Intentionally no `routes` configured: this worker is meant to be called via Service Bindings.
+
+[[services]]
+binding = "YOUTUBE_TRANSCRIPT_JSON_TO_SEGMENTS"
+service = "youtube-transcript-json-to-segments"
+
+[[services]]
+binding = "SEGMENTS_TO_CHAPTERS_AI"
+service = "segments-to-chapters-ai"
+

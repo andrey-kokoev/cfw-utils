@@ -1,0 +1,5 @@
+name = "youtube-transcript-json-to-segments"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+# Intentionally no `routes` configured: this worker is meant to be called via Service Bindings.

@@ -1,0 +1,10 @@
+name = "demo-consumer"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+# This is an example “consumer” worker; it calls utils via Service Bindings.
+
+[[services]]
+binding = "YOUTUBE_TRANSCRIPT_JSON_TO_CHAPTERS_AI"
+service = "youtube-transcript-json-to-chapters-ai"
+

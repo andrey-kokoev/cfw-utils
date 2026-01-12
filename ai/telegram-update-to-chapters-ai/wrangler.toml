@@ -1,0 +1,10 @@
+name = "telegram-update-to-chapters-ai"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+# This worker is intended to be used as a public Telegram webhook.
+
+[[services]]
+binding = "YOUTUBE_TRANSCRIPT_JSON_TO_CHAPTERS_AI"
+service = "youtube-transcript-json-to-chapters-ai"
+

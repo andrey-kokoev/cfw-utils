@@ -1,0 +1,107 @@
+{
+  "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "worker",
+      "type": "promptString",
+      "description": "Workspace package to run (e.g. chapter-summarizer)",
+      "default": "chapter-summarizer"
+    },
+    {
+      "id": "wranglerArgs",
+      "type": "promptString",
+      "description": "Extra wrangler args (optional), e.g. --name utils-chapter-summarizer",
+      "default": ""
+    }
+  ],
+  "tasks": [
+    {
+      "label": "Deploy Worker (pnpm filter)",
+      "type": "shell",
+      "command": "pnpm --filter=${input:worker} deploy",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Deploy Worker (wrangler --name override)",
+      "type": "shell",
+      "command": "pnpm --filter=${input:worker} exec -- wrangler deploy ${input:wranglerArgs}",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: youtube-transcript-json-to-segments",
+      "type": "shell",
+      "command": "pnpm --filter=youtube-transcript-json-to-segments dev",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Deploy: youtube-transcript-json-to-segments",
+      "type": "shell",
+      "command": "pnpm --filter=youtube-transcript-json-to-segments deploy",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: segments-to-chapters-ai",
+      "type": "shell",
+      "command": "pnpm --filter=segments-to-chapters-ai dev",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Deploy: segments-to-chapters-ai",
+      "type": "shell",
+      "command": "pnpm --filter=segments-to-chapters-ai deploy",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: youtube-transcript-json-to-chapters-ai",
+      "type": "shell",
+      "command": "pnpm --filter=youtube-transcript-json-to-chapters-ai dev",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Deploy: youtube-transcript-json-to-chapters-ai",
+      "type": "shell",
+      "command": "pnpm --filter=youtube-transcript-json-to-chapters-ai deploy",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: demo-consumer",
+      "type": "shell",
+      "command": "pnpm --filter=demo-consumer dev",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Deploy: demo-consumer",
+      "type": "shell",
+      "command": "pnpm --filter=demo-consumer deploy",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: telegram-update-to-chapters-ai",
+      "type": "shell",
+      "command": "pnpm --filter=telegram-update-to-chapters-ai dev",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Deploy: telegram-update-to-chapters-ai",
+      "type": "shell",
+      "command": "pnpm --filter=telegram-update-to-chapters-ai deploy",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}
