@@ -51,7 +51,7 @@ async function processMessage(value: DocxConversionProcessRequest, env: Env) {
   }
 
   await env.DB.prepare(
-    `UPDATE ${DOCS_TABLE} SET content = ?, status = ?, updatedAt = ? WHERE id = ?`,
+    `UPDATE ${DOCS_TABLE} SET content = ?, status = ?, updated_at = ? WHERE id = ?`,
   )
     .bind(markdown, "uploaded", Math.floor(Date.now() / 1000), documentId)
     .run();
@@ -79,7 +79,7 @@ export default {
         await processMessage(body, env);
       } catch (error) {
         await env.DB.prepare(
-          `UPDATE ${DOCS_TABLE} SET status = ?, updatedAt = ? WHERE id = ?`,
+          `UPDATE ${DOCS_TABLE} SET status = ?, updated_at = ? WHERE id = ?`,
         )
           .bind("error", Math.floor(Date.now() / 1000), body.documentId)
           .run();
