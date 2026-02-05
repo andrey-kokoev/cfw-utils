@@ -94,3 +94,16 @@ export const HealthResponseSchema = z.object({
   service: z.string(),
 });
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;
+
+export {
+  DocxConversionEnqueueRequestSchema,
+  DocxConversionEnqueueResponseSchema,
+  DocxConversionProcessRequestSchema,
+  DocxConversionProcessResponseSchema,
+} from "./docx-conversion";
+export type {
+  DocxConversionEnqueueRequest,
+  DocxConversionEnqueueResponse,
+  DocxConversionProcessRequest,
+  DocxConversionProcessResponse,
+} from "./docx-conversion";

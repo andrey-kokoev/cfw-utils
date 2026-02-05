@@ -1,0 +1,10 @@
+name = "docx-conversion-producer"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+# Intentionally no `routes` configured: this worker is meant to be called via Service Bindings.
+
+[queues]
+producers = [
+  { binding = "DOCX_CONVERSION_QUEUE", queue = "harmonia-docx-conversion" }
+]
