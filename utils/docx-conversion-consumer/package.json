@@ -14,9 +14,9 @@
     "@cfw-utils/worker-kit": "workspace:*"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260107.0",
-    "typescript": "^5.6.3",
-    "vitest": "^2.1.8",
-    "wrangler": "^3.109.2"
+    "@cloudflare/workers-types": "^4.20260205.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18",
+    "wrangler": "^4.62.0"
   }
 }

@@ -4,6 +4,8 @@ export const DocxConversionEnqueueRequestSchema = z.object({
   documentId: z.number().int().positive(),
   storageKey: z.string().min(1),
   filename: z.string().min(1).optional(),
+  conversionUrl: z.string().url(),
+  conversionToken: z.string().min(1).optional(),
 });
 export type DocxConversionEnqueueRequest = z.infer<typeof DocxConversionEnqueueRequestSchema>;
 

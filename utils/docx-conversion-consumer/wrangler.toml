@@ -17,7 +17,3 @@ bucket_name = "harmonia-bucket"
 consumers = [
   { queue = "harmonia-docx-conversion" }
 ]
-
-[vars]
-DOCX_CONVERSION_URL = ""
-DOCX_CONVERSION_TOKEN = ""

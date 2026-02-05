@@ -13,21 +13,16 @@ const DOCS_TABLE = "documents";
 type Env = {
   DB: D1Database;
   BLOB: R2Bucket;
-  DOCX_CONVERSION_URL: string;
-  DOCX_CONVERSION_TOKEN?: string;
 };
 
 async function processMessage(value: DocxConversionProcessRequest, env: Env) {
-  const { documentId, storageKey, filename } = value;
-  if (!env.DOCX_CONVERSION_URL) {
-    throw new Error("DOCX_CONVERSION_URL is not configured");
-  }
+  const { documentId, storageKey, filename, conversionUrl, conversionToken } = value;
 
   const existing = await env.DB.prepare(`SELECT id FROM ${DOCS_TABLE} WHERE id = ?`).bind(documentId).first();
   if (!existing) return;
 
-  const conversionUrl = new URL(env.DOCX_CONVERSION_URL);
-  conversionUrl.pathname = conversionUrl.pathname.replace(/\/$/, "") + "/convert-json";
+  const endpoint = new URL(conversionUrl);
+  endpoint.pathname = endpoint.pathname.replace(/\/$/, "") + "/convert-json";
 
   const object = await env.BLOB.get(storageKey);
   if (!object) {
@@ -39,11 +34,9 @@ async function processMessage(value: DocxConversionProcessRequest, env: Env) {
   const blob = new Blob([buffer]);
   form.append("file", blob, filename || `document-${documentId}.docx`);
 
-  const response = await fetch(conversionUrl.toString(), {
+  const response = await fetch(endpoint.toString(), {
     method: "POST",
-    headers: env.DOCX_CONVERSION_TOKEN
-      ? { Authorization: `Bearer ${env.DOCX_CONVERSION_TOKEN}` }
-      : undefined,
+    headers: conversionToken ? { Authorization: `Bearer ${conversionToken}` } : undefined,
     body: form,
   });
 
