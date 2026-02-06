@@ -1,5 +1,5 @@
 import { err, json } from "@cfw-utils/worker-kit";
-import { HealthResponseSchema, HttpJobRunRequestSchema, type HealthResponse } from "@cfw-utils/schemas";
+import { HealthResponseSchema, HttpJobRunRequestSchema, type HealthResponse, type HttpJobRunRequest } from "@cfw-utils/schemas";
 import type { MessageBatch } from "@cloudflare/workers-types";
 
 const JOBS_TABLE = "http_jobs";
@@ -9,6 +9,7 @@ const DEFAULT_MAX_BYTES = 1_000_000;
 type Env = {
   DB: D1Database;
   BLOB: R2Bucket;
+  KV: KVNamespace;
 };
 
 type JobRow = {
@@ -117,7 +118,27 @@ async function processJob(env: Env, jobId: string) {
 
   const timeoutSeconds = requestData.timeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS;
   const responseMaxBytes = requestData.responseMaxBytes ?? DEFAULT_MAX_BYTES;
-  const requestHeaders = { ...(requestData.headers ?? {}) };
+  let secretHeaders: Record<string, string> = {};
+  try {
+    const rawSecretHeaders = await env.KV.get(`http-jobs:secret-headers:${jobId}`);
+    if (rawSecretHeaders) {
+      const parsed = JSON.parse(rawSecretHeaders) as unknown;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        secretHeaders = Object.fromEntries(
+          Object.entries(parsed as Record<string, unknown>).filter(
+            ([, v]) => typeof v === "string",
+          ),
+        ) as Record<string, string>;
+      }
+    }
+  } catch {
+    secretHeaders = {};
+  }
+
+  const requestHeaders = {
+    ...(requestData.headers ?? {}),
+    ...secretHeaders,
+  };
   if (requestData.meta?.projectId && requestData.meta.requestedBy) {
     requestHeaders["x-harmonia-project-id"] = String(requestData.meta.projectId);
     requestHeaders["x-harmonia-requested-by"] = requestData.meta.requestedBy;
@@ -166,6 +187,11 @@ async function processJob(env: Env, jobId: string) {
     await updateJob(env, jobId, { status: "failed", error: message });
   } finally {
     clearTimeout(timeout);
+    try {
+      await env.KV.delete(`http-jobs:secret-headers:${jobId}`);
+    } catch {
+      // Best effort cleanup.
+    }
   }
 }
 

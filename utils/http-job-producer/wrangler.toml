@@ -13,6 +13,11 @@ database_id = "5a85c2aa-5150-442a-863a-435dfcff6356"
 binding = "BLOB"
 bucket_name = "harmonia-bucket"
 
+[[kv_namespaces]]
+binding = "KV"
+id = "813f107b0a744033958a73dcfdb85a6f"
+preview_id = "813f107b0a744033958a73dcfdb85a6f"
+
 [queues]
 producers = [
   { binding = "HTTP_JOB_QUEUE", queue = "harmonia-http-jobs" }
