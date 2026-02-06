@@ -1,0 +1,19 @@
+name = "http-job-producer"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+# Intentionally no `routes` configured: this worker is meant to be called via Service Bindings.
+
+[[d1_databases]]
+binding = "DB"
+database_name = "harmonia-db"
+database_id = "5a85c2aa-5150-442a-863a-435dfcff6356"
+
+[[r2_buckets]]
+binding = "BLOB"
+bucket_name = "harmonia-bucket"
+
+[queues]
+producers = [
+  { binding = "HTTP_JOB_QUEUE", queue = "harmonia-http-jobs" }
+]

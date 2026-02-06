@@ -107,3 +107,16 @@ export type {
   DocxConversionProcessRequest,
   DocxConversionProcessResponse,
 } from "./docx-conversion";
+
+export {
+  HttpJobRunRequestSchema,
+  HttpJobRunResponseSchema,
+  HttpJobStatusSchema,
+  HttpJobResultSchema,
+} from "./http-jobs";
+export type {
+  HttpJobRunRequest,
+  HttpJobRunResponse,
+  HttpJobStatus,
+  HttpJobResult,
+} from "./http-jobs";

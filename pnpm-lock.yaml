@@ -214,6 +214,50 @@ importers:
         specifier: ^4.62.0
         version: 4.62.0(@cloudflare/workers-types@4.20260111.0)
 
+  utils/http-job-consumer:
+    dependencies:
+      '@cfw-utils/schemas':
+        specifier: workspace:*
+        version: link:../../packages/schemas
+      '@cfw-utils/worker-kit':
+        specifier: workspace:*
+        version: link:../../packages/worker-kit
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20260107.0
+        version: 4.20260205.0
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9
+      wrangler:
+        specifier: ^4.62.0
+        version: 4.62.0(@cloudflare/workers-types@4.20260205.0)
+
+  utils/http-job-producer:
+    dependencies:
+      '@cfw-utils/schemas':
+        specifier: workspace:*
+        version: link:../../packages/schemas
+      '@cfw-utils/worker-kit':
+        specifier: workspace:*
+        version: link:../../packages/worker-kit
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20260107.0
+        version: 4.20260205.0
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9
+      wrangler:
+        specifier: ^4.62.0
+        version: 4.62.0(@cloudflare/workers-types@4.20260205.0)
+
 packages:
 
   '@biomejs/biome@2.3.14':
