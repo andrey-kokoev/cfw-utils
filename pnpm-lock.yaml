@@ -147,6 +147,28 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/feedback-gitops:
+    dependencies:
+      '@cfw-utils/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+      '@cfw-utils/worker-kit':
+        specifier: workspace:*
+        version: link:../worker-kit
+      zod:
+        specifier: ^4.3.5
+        version: 4.3.5
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20260107.0
+        version: 4.20260205.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      wrangler:
+        specifier: ^4.62.0
+        version: 4.62.0(@cloudflare/workers-types@4.20260205.0)
+
   packages/schemas:
     dependencies:
       zod:
@@ -213,28 +235,6 @@ importers:
       wrangler:
         specifier: ^4.62.0
         version: 4.62.0(@cloudflare/workers-types@4.20260111.0)
-
-  utils/feedback-gitops:
-    dependencies:
-      '@cfw-utils/schemas':
-        specifier: workspace:*
-        version: link:../../packages/schemas
-      '@cfw-utils/worker-kit':
-        specifier: workspace:*
-        version: link:../../packages/worker-kit
-      zod:
-        specifier: ^4.3.5
-        version: 4.3.5
-    devDependencies:
-      '@cloudflare/workers-types':
-        specifier: ^4.20260107.0
-        version: 4.20260205.0
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-      wrangler:
-        specifier: ^4.62.0
-        version: 4.62.0(@cloudflare/workers-types@4.20260205.0)
 
   utils/http-job-consumer:
     dependencies:

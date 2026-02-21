@@ -13,7 +13,7 @@ Event-sourced feedback loop for Cloudflare Pages. Embeddable widget submits to G
 ## Installation
 
 ```bash
-npm install @andrey-kokoev/cfw-utils
+npm install @cfw-utils/feedback-gitops
 ```
 
 ## Configuration

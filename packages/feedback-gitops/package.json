@@ -1,6 +1,6 @@
 {
-  "name": "feedback-gitops",
-  "private": true,
+  "name": "@cfw-utils/feedback-gitops",
+  "private": false,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
