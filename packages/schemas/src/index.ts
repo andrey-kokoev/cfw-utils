@@ -120,3 +120,16 @@ export type {
   HttpJobStatus,
   HttpJobResult,
 } from "./http-jobs";
+
+export {
+  FeedbackSubmissionSchema,
+  FeedbackEnqueueResponseSchema,
+  GitHubIssuePayloadSchema,
+  FeedbackWidgetConfigSchema,
+} from "./feedback-gitops";
+export type {
+  FeedbackSubmission,
+  FeedbackEnqueueResponse,
+  GitHubIssuePayload,
+  FeedbackWidgetConfig,
+} from "./feedback-gitops";
