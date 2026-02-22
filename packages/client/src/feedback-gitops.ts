@@ -11,6 +11,8 @@ export interface FeedbackGitopsClientConfig {
   service: ServiceFetcher;
   /** Base URL for the worker (used for constructing widget.js URL) */
   workerUrl: string;
+  /** API key for accessing protected endpoints */
+  apiKey: string;
 }
 
 /**
@@ -18,8 +20,17 @@ export interface FeedbackGitopsClientConfig {
  * Use this when calling the worker via Service Binding from another Worker/Pages Function.
  */
 export function createFeedbackGitopsClient(config: FeedbackGitopsClientConfig) {
+  // Create a wrapped fetcher that adds the API key header
+  const fetcherWithAuth: ServiceFetcher = {
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+      const headers = new Headers(init?.headers);
+      headers.set("X-API-Key", config.apiKey);
+      return config.service.fetch(input, { ...init, headers });
+    },
+  };
+
   const enqueueFeedback = createSchemaClient<typeof FeedbackSubmissionSchema, typeof FeedbackEnqueueResponseSchema>({
-    fetcher: config.service,
+    fetcher: fetcherWithAuth,
     url: `${config.workerUrl}/api/issue`,
     method: "POST",
     req: FeedbackSubmissionSchema,

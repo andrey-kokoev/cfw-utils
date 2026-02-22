@@ -29,6 +29,8 @@ interface Env {
   GITHUB_PAT: string;
   GITHUB_REPO_OWNER: string;
   GITHUB_REPO_NAME: string;
+  /** API key to protect /api/issue from public access */
+  API_KEY: string;
 }
 
 /**
@@ -76,8 +78,14 @@ export function createFeedbackWidget(config: FeedbackWidgetConfig) {
       return json({ ok: true, service: "feedback-gitops" }, { headers: corsHeaders });
     }
 
-    // POST /api/issue - Submit feedback
+    // POST /api/issue - Submit feedback (protected by API key)
     if (request.method === "POST" && url.pathname === "/api/issue") {
+      // Validate API key to prevent unauthorized access
+      const apiKey = request.headers.get("X-API-Key");
+      if (apiKey !== env.API_KEY) {
+        return json(err({ error: "Unauthorized", code: "UNAUTHORIZED" }), { status: 401 });
+      }
+
       const handler = createSchemaHandler<typeof FeedbackSubmissionSchema, typeof FeedbackEnqueueResponseSchema, Env>({
         method: "POST",
         req: FeedbackSubmissionSchema,
@@ -122,6 +130,11 @@ export default {
         labels: ["agent-execute"],
       },
     };
+
+    // Require API_KEY to be set
+    if (!env.API_KEY) {
+      return json(err({ error: "API_KEY not configured", code: "CONFIG_ERROR" }), { status: 500 });
+    }
 
     return createFeedbackWidget(config)(request, env);
   },
