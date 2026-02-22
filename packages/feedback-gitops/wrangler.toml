@@ -2,7 +2,10 @@ name = "feedback-gitops"
 main = "src/index.ts"
 compatibility_date = "2026-01-01"
 
-# Intentionally no `routes` configured: this worker is meant to be called via Service Bindings.
+# No custom routes - worker is accessible at feedback-gitops.YOUR_ACCOUNT.workers.dev
+# GET /widget.js - Public endpoint for loading the widget
+# POST /api/issue - Called via Service Binding from thoughts Pages Function
+#                    (can also be called directly with proper CORS)
 
 [[queues.producers]]
 queue = "feedback-queue"

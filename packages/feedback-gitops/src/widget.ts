@@ -1,5 +1,8 @@
 /**
  * Generates the widget.js script content that gets injected into client pages.
+ * @param endpoint - The API endpoint to POST feedback to (can be relative like '/api/feedback')
+ * @param defaultRepo - The GitHub repo to create issues in
+ * @param defaultLabels - Default labels to apply to issues
  */
 export function generateWidgetScript(endpoint: string, defaultRepo: string, defaultLabels: string[]): string {
   const defaultLabelsStr = defaultLabels.join(",");
