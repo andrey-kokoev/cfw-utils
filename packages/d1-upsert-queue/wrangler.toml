@@ -1,0 +1,23 @@
+name = "d1-upsert-queue"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+# Queue configuration
+[[queues.producers]]
+queue = "d1-upsert-queue"
+binding = "D1_UPSERT_QUEUE"
+
+[[queues.consumers]]
+queue = "d1-upsert-queue"
+max_batch_size = 20
+max_batch_timeout = 5
+max_retries = 3
+
+# D1 database binding for smart-scheduling
+# This makes the worker specific to smart-scheduling's database
+# For other apps, deploy a separate instance with different bindings
+[[d1_databases]]
+binding = "DB"
+database_name = "smart-scheduling-ui"
+database_id = "76e85a9a-da9a-46b4-aace-b66b485bc916"
+preview_database_id = "76e85a9a-da9a-46b4-aace-b66b485bc916"
