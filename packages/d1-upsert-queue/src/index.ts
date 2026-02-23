@@ -326,7 +326,18 @@ export default {
         database: "DB",
         table: "employees",
         primaryKey: "number",
-        record: { number: 999999, firstName: "Test", lastName: "User" },
+        record: {
+          number: 999999,
+          first_name: "Test",
+          last_name: "User",
+          status: "Active",
+          job: "Test Job",
+          business_title: "Test Title",
+          location: "Test Location",
+          market_short: "TEST",
+          pay_class: "Test Class",
+          is_active: 1
+        },
         index: 0,
         total: 1
       })
