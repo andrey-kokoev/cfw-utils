@@ -102,6 +102,8 @@ async function updateJobProgress(
   if (!result) {
     throw new Error(`Failed to update job progress for ${jobId}`)
   }
+  
+  console.log(`[d1-upsert-queue] Job ${jobId} progress: ${result.processed_records}/${total} processed, status: ${result.status}`)
 }
 
 /**
@@ -203,6 +205,8 @@ async function handleQueue(
   batch: MessageBatch<D1UpsertMessage>,
   env: Env
 ): Promise<void> {
+  console.log(`[d1-upsert-queue] Processing batch of ${batch.messages.length} messages`)
+  
   // Validate message batch size (prevent memory issues)
   if (batch.messages.length > 100) {
     console.warn(`Large batch received: ${batch.messages.length} messages`)
@@ -236,13 +240,16 @@ async function handleQueue(
     
     const db = env[database] as D1Database | undefined
     if (!db) {
-      console.error(`Database binding not found: ${database}`)
+      console.error(`[d1-upsert-queue] Database binding not found: ${database}`)
+      console.error(`[d1-upsert-queue] Available env keys: ${Object.keys(env).join(', ')}`)
       recordFailure(database)
       for (const msg of messages) {
         msg.retry()
       }
       continue
     }
+    
+    console.log(`[d1-upsert-queue] Processing ${messages.length} messages for database: ${database}`)
     
     // Process messages for this database
     for (const message of messages) {
@@ -261,6 +268,7 @@ async function handleQueue(
 
         // Acknowledge successful processing
         message.ack()
+        console.log(`[d1-upsert-queue] Processed record ${index + 1}/${total} for job ${jobId}`)
 
       } catch (error) {
         console.error(`Failed to upsert record ${index} for job ${jobId}:`, error)
@@ -310,5 +318,20 @@ CREATE INDEX IF NOT EXISTS idx_d1_upsert_jobs_created ON d1_upsert_jobs(created_
 export default {
   async queue(batch: MessageBatch<D1UpsertMessage>, env: Env): Promise<void> {
     return handleQueue(batch, env)
+  },
+  async fetch(request: Request, env: Env): Promise<Response> {
+    if (request.method === "POST") {
+      await env.D1_UPSERT_QUEUE.send({
+        jobId: "test-job-" + Date.now(),
+        database: "DB",
+        table: "employees",
+        primaryKey: "number",
+        record: { number: 999999, firstName: "Test", lastName: "User" },
+        index: 0,
+        total: 1
+      });
+      return new Response("Sent test message to queue");
+    }
+    return new Response("Queue consumer is running");
   }
 }
