@@ -4,19 +4,28 @@ import type { D1UpsertMessage } from "./types"
 
 type Env = {
   DB: D1Database
+  D1_UPSERT_QUEUE: Queue<D1UpsertMessage>
 }
 
 // Mock D1Database
-function createMockD1(): D1Database {
+function createMockD1 (): D1Database {
   const prepared = {
     bind: vi.fn().mockReturnThis(),
     run: vi.fn().mockResolvedValue({}),
     first: vi.fn().mockResolvedValue({ status: 'processing', processed_records: 1, failed_records: 0 }),
   }
-  
+
   return {
     prepare: vi.fn().mockReturnValue(prepared),
   } as unknown as D1Database
+}
+
+// Mock Queue
+function createMockQueue (): Queue<D1UpsertMessage> {
+  return {
+    send: vi.fn().mockResolvedValue(undefined),
+    sendBatch: vi.fn().mockResolvedValue(undefined),
+  } as unknown as Queue<D1UpsertMessage>
 }
 
 describe("d1-upsert-queue", () => {
@@ -51,20 +60,20 @@ describe("d1-upsert-queue", () => {
             retry: vi.fn(),
           }],
         }
-        await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: failingDb } as Env)
+        await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: failingDb, D1_UPSERT_QUEUE: createMockQueue() } as Env)
       }
 
       // 6th message should trigger circuit breaker
       const batch6 = {
         messages: [{
-          body: { ...message, index: 5 },
+          body: { ...message, index: 0 },
           ack: vi.fn(),
           retry: vi.fn(),
         }],
       }
-      
-      await worker.queue(batch6 as unknown as MessageBatch<D1UpsertMessage>, { DB: failingDb } as Env)
-      
+
+      await worker.queue(batch6 as unknown as MessageBatch<D1UpsertMessage>, { DB: failingDb, D1_UPSERT_QUEUE: createMockQueue() } as Env)
+
       // Circuit is open, all messages should be retried
       expect(batch6.messages[0].retry).toHaveBeenCalled()
     })
@@ -95,8 +104,8 @@ describe("d1-upsert-queue", () => {
           }],
         }
 
-        await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db } as Env)
-        
+        await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db, D1_UPSERT_QUEUE: createMockQueue() } as Env)
+
         // Invalid messages are acknowledged (not retried) to prevent loops
         expect(batch.messages[0].ack).toHaveBeenCalled()
         expect(batch.messages[0].retry).not.toHaveBeenCalled()
@@ -123,7 +132,7 @@ describe("d1-upsert-queue", () => {
         }],
       }
 
-      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db } as Env)
+      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db, D1_UPSERT_QUEUE: createMockQueue() } as Env)
       expect(batch.messages[0].ack).toHaveBeenCalled()
     })
 
@@ -147,7 +156,7 @@ describe("d1-upsert-queue", () => {
         }],
       }
 
-      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db } as Env)
+      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db, D1_UPSERT_QUEUE: createMockQueue() } as Env)
       expect(batch.messages[0].ack).toHaveBeenCalled()
     })
   })
@@ -173,7 +182,7 @@ describe("d1-upsert-queue", () => {
         }],
       }
 
-      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db } as Env)
+      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db, D1_UPSERT_QUEUE: createMockQueue() } as Env)
 
       // Should call retry due to error
       expect(batch.messages[0].retry).toHaveBeenCalled()
@@ -199,7 +208,7 @@ describe("d1-upsert-queue", () => {
         }],
       }
 
-      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db } as Env)
+      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db, D1_UPSERT_QUEUE: createMockQueue() } as Env)
 
       expect(batch.messages[0].retry).toHaveBeenCalled()
     })
@@ -224,11 +233,11 @@ describe("d1-upsert-queue", () => {
         }],
       }
 
-      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db } as Env)
+      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db, D1_UPSERT_QUEUE: createMockQueue() } as Env)
 
       // Should acknowledge successful processing
       expect(batch.messages[0].ack).toHaveBeenCalled()
-      
+
       // Verify SQL was prepared with correct table
       expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO employees"))
     })
@@ -238,7 +247,7 @@ describe("d1-upsert-queue", () => {
     it("increments processed count atomically", async () => {
       const db = createMockD1()
       const prepared = db.prepare as ReturnType<typeof vi.fn>
-      
+
       const messages: D1UpsertMessage[] = [
         { jobId: "job-123", database: "DB", table: "employees", primaryKey: "number", record: { number: 1 }, index: 0, total: 3 },
         { jobId: "job-123", database: "DB", table: "employees", primaryKey: "number", record: { number: 2 }, index: 1, total: 3 },
@@ -253,14 +262,14 @@ describe("d1-upsert-queue", () => {
         })),
       }
 
-      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db } as Env)
+      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { DB: db, D1_UPSERT_QUEUE: createMockQueue() } as Env)
 
       // Each message should update progress
-      const updateCalls = prepared.mock.calls.filter((call: unknown[]) => 
+      const updateCalls = prepared.mock.calls.filter((call: unknown[]) =>
         String(call[0]).includes("UPDATE d1_upsert_jobs")
       )
       expect(updateCalls.length).toBe(3)
-      
+
       // All should acknowledge
       batch.messages.forEach(m => expect(m.ack).toHaveBeenCalled())
     })
@@ -284,7 +293,7 @@ describe("d1-upsert-queue", () => {
         }],
       }
 
-      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, {} as Env)
+      await worker.queue(batch as unknown as MessageBatch<D1UpsertMessage>, { D1_UPSERT_QUEUE: createMockQueue() } as Env)
 
       expect(batch.messages[0].retry).toHaveBeenCalled()
     })

@@ -6,14 +6,14 @@ export type { D1UpsertMessage, D1UpsertJob, Env }
  * Validates a table/column name to prevent SQL injection
  * Only allows alphanumeric and underscore, must start with letter
  */
-function isValidIdentifier(name: string): boolean {
+function isValidIdentifier (name: string): boolean {
   return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)
 }
 
 /**
  * Generates parameterized INSERT ... ON CONFLICT DO UPDATE SQL
  */
-function generateUpsertSQL(
+function generateUpsertSQL (
   table: string,
   primaryKey: string,
   record: Record<string, unknown>
@@ -26,7 +26,7 @@ function generateUpsertSQL(
   }
 
   const columns = Object.keys(record)
-  
+
   // Validate all column names
   for (const col of columns) {
     if (!isValidIdentifier(col)) {
@@ -36,7 +36,7 @@ function generateUpsertSQL(
 
   const placeholders = columns.map(() => "?").join(", ")
   const columnNames = columns.join(", ")
-  
+
   // Columns to update (all except primary key)
   const updateColumns = columns.filter(col => col !== primaryKey)
   const updateClause = updateColumns.length > 0
@@ -59,7 +59,7 @@ function generateUpsertSQL(
  * Updates job progress in the target D1 database
  * Uses atomic increment to handle concurrent message processing
  */
-async function updateJobProgress(
+async function updateJobProgress (
   db: D1Database,
   jobId: string,
   total: number,
@@ -102,7 +102,7 @@ async function updateJobProgress(
   if (!result) {
     throw new Error(`Failed to update job progress for ${jobId}`)
   }
-  
+
   console.log(`[d1-upsert-queue] Job ${jobId} progress: ${result.processed_records}/${total} processed, status: ${result.status}`)
 }
 
@@ -112,11 +112,11 @@ async function updateJobProgress(
 /**
  * Validates the message format to prevent processing errors
  */
-function validateMessage(msg: unknown): msg is D1UpsertMessage {
+function validateMessage (msg: unknown): msg is D1UpsertMessage {
   if (!msg || typeof msg !== 'object') return false
-  
+
   const m = msg as Record<string, unknown>
-  
+
   // Required fields
   const required = ['jobId', 'database', 'table', 'primaryKey', 'record', 'index', 'total']
   for (const field of required) {
@@ -125,7 +125,7 @@ function validateMessage(msg: unknown): msg is D1UpsertMessage {
       return false
     }
   }
-  
+
   // Type checks
   if (typeof m.jobId !== 'string') return false
   if (typeof m.database !== 'string') return false
@@ -134,18 +134,18 @@ function validateMessage(msg: unknown): msg is D1UpsertMessage {
   if (typeof m.record !== 'object' || m.record === null) return false
   if (typeof m.index !== 'number') return false
   if (typeof m.total !== 'number') return false
-  
+
   // Sanity checks
   if (m.index < 0 || m.index >= m.total) {
     console.error(`Invalid index ${m.index} for total ${m.total}`)
     return false
   }
-  
+
   if (m.total > 100000) {
     console.error(`Suspiciously large job: ${m.total} records`)
     return false
   }
-  
+
   return true
 }
 
@@ -157,10 +157,10 @@ const CIRCUIT_BREAKER_TIMEOUT_MS = 60000 // 1 minute
 /**
  * Check if circuit breaker is open for a database
  */
-function isCircuitOpen(database: string): boolean {
+function isCircuitOpen (database: string): boolean {
   const cb = circuitBreakers.get(database)
   if (!cb) return false
-  
+
   if (cb.open) {
     // Check if we should try closing
     if (Date.now() - cb.lastFailure > CIRCUIT_BREAKER_TIMEOUT_MS) {
@@ -177,7 +177,7 @@ function isCircuitOpen(database: string): boolean {
 /**
  * Record success for circuit breaker
  */
-function recordSuccess(database: string): void {
+function recordSuccess (database: string): void {
   const cb = circuitBreakers.get(database)
   if (cb) {
     cb.failures = 0
@@ -188,45 +188,45 @@ function recordSuccess(database: string): void {
 /**
  * Record failure for circuit breaker
  */
-function recordFailure(database: string): void {
+function recordFailure (database: string): void {
   const cb = circuitBreakers.get(database) || { failures: 0, lastFailure: 0, open: false }
   cb.failures++
   cb.lastFailure = Date.now()
-  
+
   if (cb.failures >= CIRCUIT_BREAKER_THRESHOLD) {
     cb.open = true
     console.error(`Circuit breaker OPENED for ${database} after ${cb.failures} failures`)
   }
-  
+
   circuitBreakers.set(database, cb)
 }
 
-async function handleQueue(
+async function handleQueue (
   batch: MessageBatch<D1UpsertMessage>,
   env: Env
 ): Promise<void> {
   console.log(`[d1-upsert-queue] Processing batch of ${batch.messages.length} messages`)
-  
+
   // Validate message batch size (prevent memory issues)
   if (batch.messages.length > 100) {
     console.warn(`Large batch received: ${batch.messages.length} messages`)
   }
-  
+
   // Group messages by database for circuit breaker efficiency
-  const messagesByDb = new Map<string, typeof batch.messages>()
+  const messagesByDb = new Map<string, Message<D1UpsertMessage>[]>()
   for (const message of batch.messages) {
     if (!validateMessage(message.body)) {
       console.error("Invalid message format, acknowledging to prevent retry loop:", message.body)
       message.ack()
       continue
     }
-    
+
     const db = message.body.database
-    const list = messagesByDb.get(db) || []
+    const list = messagesByDb.get(db) ?? []
     list.push(message)
     messagesByDb.set(db, list)
   }
-  
+
   // Process each database group
   for (const [database, messages] of messagesByDb) {
     // Check circuit breaker
@@ -237,7 +237,7 @@ async function handleQueue(
       }
       continue
     }
-    
+
     const db = env[database] as D1Database | undefined
     if (!db) {
       console.error(`[d1-upsert-queue] Database binding not found: ${database}`)
@@ -248,9 +248,9 @@ async function handleQueue(
       }
       continue
     }
-    
+
     console.log(`[d1-upsert-queue] Processing ${messages.length} messages for database: ${database}`)
-    
+
     // Process messages for this database
     for (const message of messages) {
       const { jobId, table, primaryKey, record, index, total } = message.body
@@ -316,10 +316,10 @@ CREATE INDEX IF NOT EXISTS idx_d1_upsert_jobs_created ON d1_upsert_jobs(created_
 `
 
 export default {
-  async queue(batch: MessageBatch<D1UpsertMessage>, env: Env): Promise<void> {
+  async queue (batch: MessageBatch<D1UpsertMessage>, env: Env): Promise<void> {
     return handleQueue(batch, env)
   },
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch (request: Request, env: Env): Promise<Response> {
     if (request.method === "POST") {
       await env.D1_UPSERT_QUEUE.send({
         jobId: "test-job-" + Date.now(),
@@ -329,9 +329,9 @@ export default {
         record: { number: 999999, firstName: "Test", lastName: "User" },
         index: 0,
         total: 1
-      });
-      return new Response("Sent test message to queue");
+      })
+      return new Response("Sent test message to queue")
     }
-    return new Response("Queue consumer is running");
+    return new Response("Queue consumer is running")
   }
 }
