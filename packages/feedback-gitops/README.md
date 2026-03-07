@@ -23,7 +23,7 @@ npm install @cfw-utils/feedback-gitops
 ```toml
 name = "feedback-loop"
 main = "src/index.ts"
-compatibility_date = "2024-01-01"
+compatibility_date = "2026-01-01"
 
 [[queues.producers]]
 queue = "feedback-queue"
